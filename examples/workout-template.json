@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "type": "workout",
+  "workout": {
+    "name": "Nom de l'entraînement",
+    "notes": "Notes optionnelles (objectif, matériel…)",
+    "exercises": [
+      {
+        "name": "Exercice chronométré",
+        "workDurationSeconds": 45,
+        "restDurationSeconds": 30,
+        "notes": "Renseignez une durée de travail (en secondes)."
+      },
+      {
+        "name": "Exercice en répétitions",
+        "workDurationSeconds": 0,
+        "reps": 12,
+        "restDurationSeconds": 30,
+        "notes": "Mettez workDurationSeconds à 0 et renseignez reps : pas de chrono, on avance manuellement."
+      },
+      {
+        "name": "Exercice mixte (temps + répétitions)",
+        "workDurationSeconds": 40,
+        "reps": 10,
+        "restDurationSeconds": 20,
+        "notes": "Durée ET nombre de répétitions affichés ensemble."
+      }
+    ]
+  }
+}

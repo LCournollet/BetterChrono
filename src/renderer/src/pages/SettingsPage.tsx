@@ -6,14 +6,15 @@ import { Button } from '../components/ui/Button'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { JsonExportModal } from '../components/JsonExportModal'
 import { JsonImportModal, type ImportCommit } from '../components/JsonImportModal'
-import { IconDownload, IconUpload, IconTrash } from '../components/Icons'
-import { exportWorkoutsToJson } from '../utils/json'
+import { IconDownload, IconUpload, IconTrash, IconCopy } from '../components/Icons'
+import { exportWorkoutsToJson, emptyWorkoutTemplateJson } from '../utils/json'
 
 export function SettingsPage(): React.JSX.Element {
   const { workouts, sessions, importWorkouts, updateWorkout, clearAllData } = useStore()
 
   const [exportOpen, setExportOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
+  const [templateOpen, setTemplateOpen] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
 
   const handleImportCommit = (result: ImportCommit): void => {
@@ -52,14 +53,24 @@ export function SettingsPage(): React.JSX.Element {
           >
             Importer depuis JSON
           </Button>
+          <Button
+            variant="ghost"
+            iconLeft={<IconCopy width={16} height={16} />}
+            onClick={() => setTemplateOpen(true)}
+          >
+            Modèle JSON vide
+          </Button>
         </div>
         <div className="rounded-lg border border-line bg-canvas/50 p-3 text-xs text-ink-soft">
           <p className="font-medium text-ink-soft">Format pris en charge</p>
           <p className="mt-1">
             Un entraînement unique <span className="font-mono">{'{ "type": "workout" }'}</span> ou une
-            collection <span className="font-mono">{'{ "type": "workout-collection" }'}</span>. Le champ{' '}
-            <span className="font-mono">version</span> assure la compatibilité future. Un exemple est
-            fourni dans <span className="font-mono">examples/workout-example.json</span>.
+            collection <span className="font-mono">{'{ "type": "workout-collection" }'}</span>. Chaque
+            exercice accepte une durée (<span className="font-mono">workDurationSeconds</span>) et/ou un
+            nombre de répétitions (<span className="font-mono">reps</span>) — au moins l'un des deux. Le
+            champ <span className="font-mono">version</span> assure la compatibilité future. Cliquez sur{' '}
+            <span className="font-medium">« Modèle JSON vide »</span> pour partir d'une base prête à
+            remplir.
           </p>
         </div>
       </Card>
@@ -104,6 +115,14 @@ export function SettingsPage(): React.JSX.Element {
         onClose={() => setImportOpen(false)}
         existingWorkouts={workouts.map((w) => ({ id: w.id, name: w.name }))}
         onCommit={handleImportCommit}
+      />
+
+      <JsonExportModal
+        open={templateOpen}
+        onClose={() => setTemplateOpen(false)}
+        title="Modèle d'entraînement vide"
+        fileName="betterchrono-modele"
+        json={emptyWorkoutTemplateJson()}
       />
 
       <ConfirmDialog

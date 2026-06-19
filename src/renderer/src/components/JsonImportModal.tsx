@@ -5,7 +5,7 @@ import { Button } from './ui/Button'
 import { Textarea } from './ui/Input'
 import { Badge } from './ui/Badge'
 import { IconUpload, IconCheck } from './Icons'
-import { importWorkoutsFromJson } from '../utils/json'
+import { importWorkoutsFromJson, emptyWorkoutTemplateJson } from '../utils/json'
 import { formatHumanDuration } from '../utils/time'
 import { workoutTotalSeconds } from '../utils/workout'
 import { cn } from '../utils/cn'
@@ -170,6 +170,17 @@ export function JsonImportModal({
               <input type="file" accept=".json,application/json" className="hidden" onChange={handleBrowserFile} />
             </label>
           )}
+          <button
+            type="button"
+            onClick={() => {
+              const template = emptyWorkoutTemplateJson()
+              setText(template)
+              runValidation(template)
+            }}
+            className="text-xs font-medium text-accent-600 hover:text-accent-700 hover:underline"
+          >
+            Insérer un modèle vide
+          </button>
           <span className="text-xs text-ink-faint">ou collez le JSON ci-dessous</span>
         </div>
 
@@ -217,11 +228,17 @@ export function JsonImportModal({
                   </div>
                   {w.notes && <p className="mt-1 text-sm text-ink-soft">{w.notes}</p>}
                   <ul className="mt-2 space-y-0.5 text-xs text-ink-faint">
-                    {w.exercises.map((ex) => (
-                      <li key={ex.id} className="tabular-nums">
-                        • {ex.name} — {ex.workDurationSeconds}s travail / {ex.restDurationSeconds}s pause
-                      </li>
-                    ))}
+                    {w.exercises.map((ex) => {
+                      const parts: string[] = []
+                      if (ex.workDurationSeconds > 0) parts.push(`${ex.workDurationSeconds}s travail`)
+                      if (ex.reps) parts.push(`${ex.reps} reps`)
+                      parts.push(`${ex.restDurationSeconds}s pause`)
+                      return (
+                        <li key={ex.id} className="tabular-nums">
+                          • {ex.name} — {parts.join(' / ')}
+                        </li>
+                      )
+                    })}
                   </ul>
 
                   {conflict && (

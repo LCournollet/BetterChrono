@@ -6,7 +6,13 @@
 export interface Exercise {
   id: string
   name: string
+  /**
+   * Durée de travail en secondes. 0 = exercice sans chronomètre (basé sur les répétitions).
+   * Au moins une valeur parmi `workDurationSeconds > 0` ou `reps > 0` doit être renseignée.
+   */
   workDurationSeconds: number
+  /** Nombre de répétitions (optionnel). Peut être combiné avec une durée. */
+  reps?: number
   restDurationSeconds: number
   notes?: string
 }
@@ -58,5 +64,9 @@ export interface SessionPhase {
   exerciseName: string
   kind: PhaseKind
   durationSeconds: number
+  /** Vrai pour une phase de travail sans chronomètre (basée sur les répétitions). */
+  untimed: boolean
+  /** Nombre de répétitions visé pour cette phase de travail (optionnel). */
+  reps?: number
   notes?: string
 }

@@ -35,7 +35,8 @@ export function SessionRunner({ workout, onExit }: SessionRunnerProps): React.JS
   const recordedRef = useRef(false)
   const [summary, setSummary] = useState<WorkoutSession | null>(null)
 
-  const adjustDisabled = status === 'idle' || status === 'finished'
+  const adjustDisabled =
+    status === 'idle' || status === 'finished' || Boolean(timer.currentPhase?.untimed)
 
   // Enregistrement automatique de la séance à la fin (terminée ou interrompue).
   useEffect(() => {
@@ -129,6 +130,8 @@ export function SessionRunner({ workout, onExit }: SessionRunnerProps): React.JS
             kind={phase?.kind ?? 'work'}
             exerciseName={phase?.exerciseName ?? workout.exercises[0]?.name ?? ''}
             progressLabel={progressLabel}
+            untimed={phase?.untimed}
+            reps={phase?.reps}
           />
 
           {/* Prochaine étape */}
@@ -138,7 +141,11 @@ export function SessionRunner({ workout, onExit }: SessionRunnerProps): React.JS
               <span className="font-medium text-ink-soft">
                 {timer.nextPhase.kind === 'work' ? 'Travail' : 'Pause'} — {timer.nextPhase.exerciseName}
                 <span className="ml-1 text-ink-faint tabular-nums">
-                  ({formatDuration(timer.nextPhase.durationSeconds)})
+                  (
+                  {timer.nextPhase.untimed
+                    ? `×${timer.nextPhase.reps} reps`
+                    : formatDuration(timer.nextPhase.durationSeconds)}
+                  )
                 </span>
               </span>
             ) : (
@@ -273,7 +280,9 @@ export function SessionRunner({ workout, onExit }: SessionRunnerProps): React.JS
                       {ex.name || 'Exercice'}
                     </p>
                     <p className="text-xs text-ink-faint tabular-nums">
-                      {ex.workDurationSeconds}s travail
+                      {ex.workDurationSeconds > 0 ? `${ex.workDurationSeconds}s travail` : null}
+                      {ex.workDurationSeconds > 0 && ex.reps ? ' · ' : null}
+                      {ex.reps ? `${ex.reps} reps` : null}
                       {ex.restDurationSeconds > 0 && ` · ${ex.restDurationSeconds}s pause`}
                     </p>
                   </div>

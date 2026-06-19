@@ -153,8 +153,11 @@ export function useTimer(workout: Workout | undefined): TimerState & { controls:
       const phase = phases[clamped]
       setCurrentPhaseIndex(clamped)
       setRemainingSeconds(phase.durationSeconds)
-      if (autoRun) {
+      // Une phase non chronométrée (répétitions) n'a pas d'échéance : on attend « Suivant ».
+      if (autoRun && !phase.untimed && phase.durationSeconds > 0) {
         phaseEndAtRef.current = Date.now() + phase.durationSeconds * 1000
+      } else {
+        phaseEndAtRef.current = null
       }
     },
     [phases, finish]
@@ -181,8 +184,14 @@ export function useTimer(workout: Workout | undefined): TimerState & { controls:
             return idx
           }
           const nextPhase = phases[nextIndex]
-          phaseEndAtRef.current = Date.now() + nextPhase.durationSeconds * 1000
-          setRemainingSeconds(nextPhase.durationSeconds)
+          if (nextPhase.untimed || nextPhase.durationSeconds <= 0) {
+            // Phase en répétitions : pas de décompte, on attend une action manuelle.
+            phaseEndAtRef.current = null
+            setRemainingSeconds(0)
+          } else {
+            phaseEndAtRef.current = Date.now() + nextPhase.durationSeconds * 1000
+            setRemainingSeconds(nextPhase.durationSeconds)
+          }
           return nextIndex
         })
       }
@@ -226,8 +235,13 @@ export function useTimer(workout: Workout | undefined): TimerState & { controls:
     setStartedAt(new Date().toISOString())
     setElapsedSeconds(0)
     setCurrentPhaseIndex(0)
-    setRemainingSeconds(phases[0].durationSeconds)
-    phaseEndAtRef.current = Date.now() + phases[0].durationSeconds * 1000
+    const first = phases[0]
+    setRemainingSeconds(first.durationSeconds)
+    if (!first.untimed && first.durationSeconds > 0) {
+      phaseEndAtRef.current = Date.now() + first.durationSeconds * 1000
+    } else {
+      phaseEndAtRef.current = null
+    }
     setStatus('running')
   }, [phases])
 
@@ -247,13 +261,19 @@ export function useTimer(workout: Workout | undefined): TimerState & { controls:
   const resume = useCallback(() => {
     setStatus((prev) => {
       if (prev !== 'paused') return prev
-      setRemainingSeconds((r) => {
-        phaseEndAtRef.current = Date.now() + r * 1000
-        return r
-      })
+      const phase = phases[currentPhaseIndex]
+      if (phase && !phase.untimed) {
+        setRemainingSeconds((r) => {
+          phaseEndAtRef.current = Date.now() + r * 1000
+          return r
+        })
+      } else {
+        // Reprise sur une phase en répétitions : aucune échéance à reprogrammer.
+        phaseEndAtRef.current = null
+      }
       return 'running'
     })
-  }, [])
+  }, [phases, currentPhaseIndex])
 
   const stop = useCallback(() => {
     finish()
@@ -275,6 +295,8 @@ export function useTimer(workout: Workout | undefined): TimerState & { controls:
   const adjust = useCallback(
     (delta: number) => {
       if (status === 'idle' || status === 'finished') return
+      // Pas d'ajustement de temps sur une phase en répétitions (non chronométrée).
+      if (phases[currentPhaseIndex]?.untimed) return
       setRemainingSeconds((r) => {
         const updated = Math.max(0, r + delta)
         if (status === 'running' && phaseEndAtRef.current !== null) {
@@ -283,7 +305,7 @@ export function useTimer(workout: Workout | undefined): TimerState & { controls:
         return updated
       })
     },
-    [status]
+    [status, phases, currentPhaseIndex]
   )
 
   const currentPhase = phases[currentPhaseIndex]

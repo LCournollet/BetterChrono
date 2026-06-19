@@ -28,16 +28,28 @@ export function WorkoutEditPage(): React.JSX.Element {
   const [savedAt, setSavedAt] = useState<number | null>(null)
 
   const errors = useMemo(() => {
-    if (!draft) return { name: undefined as string | undefined, exercises: [] as (string | undefined)[], any: false }
+    if (!draft)
+      return {
+        name: undefined as string | undefined,
+        exercises: [] as { name?: string; value?: string }[],
+        any: false
+      }
     const nameError = draft.name.trim().length === 0 ? 'Le nom est obligatoire.' : undefined
-    const exerciseErrors = draft.exercises.map((ex) =>
-      ex.name.trim().length === 0 ? 'Nom requis' : undefined
-    )
+    const exerciseErrors = draft.exercises.map((ex) => ({
+      name: ex.name.trim().length === 0 ? 'Nom requis' : undefined,
+      value:
+        ex.workDurationSeconds > 0 || (ex.reps && ex.reps > 0)
+          ? undefined
+          : 'Renseignez une durée de travail ou un nombre de répétitions.'
+    }))
     const noExercise = draft.exercises.length === 0
     return {
       name: nameError,
       exercises: exerciseErrors,
-      any: Boolean(nameError) || exerciseErrors.some(Boolean) || noExercise
+      any:
+        Boolean(nameError) ||
+        exerciseErrors.some((e) => e.name || e.value) ||
+        noExercise
     }
   }, [draft])
 
@@ -191,7 +203,8 @@ export function WorkoutEditPage(): React.JSX.Element {
                 onMoveUp={(idx) => move(idx, -1)}
                 onMoveDown={(idx) => move(idx, 1)}
                 onDelete={removeExercise}
-                nameError={showErrors ? errors.exercises[i] : undefined}
+                nameError={showErrors ? errors.exercises[i]?.name : undefined}
+                valueError={showErrors ? errors.exercises[i]?.value : undefined}
               />
             ))}
           </div>

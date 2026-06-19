@@ -6,8 +6,11 @@ export const JSON_FORMAT_VERSION = 1
 /** Forme d'un exercice dans le format d'échange JSON (sans id ni métadonnées). */
 export interface WorkoutJsonExercise {
   name: string
-  workDurationSeconds: number
-  restDurationSeconds: number
+  /** Durée de travail en secondes. 0 ou absent = exercice basé sur les répétitions. */
+  workDurationSeconds?: number
+  /** Nombre de répétitions (optionnel, combinable avec une durée). */
+  reps?: number
+  restDurationSeconds?: number
   notes?: string
 }
 
@@ -47,6 +50,7 @@ function toJsonExercise(ex: Exercise): WorkoutJsonExercise {
     workDurationSeconds: ex.workDurationSeconds,
     restDurationSeconds: ex.restDurationSeconds
   }
+  if (ex.reps && ex.reps > 0) payload.reps = Math.round(ex.reps)
   if (ex.notes && ex.notes.trim().length > 0) payload.notes = ex.notes
   return payload
 }
@@ -66,6 +70,44 @@ export function exportWorkoutToJson(workout: Workout): string {
     version: JSON_FORMAT_VERSION,
     type: 'workout',
     workout: toJsonWorkout(workout)
+  }
+  return JSON.stringify(doc, null, 2)
+}
+
+/**
+ * Génère un modèle d'entraînement vide, prêt à remplir à la main.
+ * Illustre les trois cas : exercice chronométré, en répétitions, et mixte.
+ */
+export function emptyWorkoutTemplateJson(): string {
+  const doc: SingleWorkoutDocument = {
+    version: JSON_FORMAT_VERSION,
+    type: 'workout',
+    workout: {
+      name: 'Nom de l\'entraînement',
+      notes: 'Notes optionnelles (objectif, matériel…)',
+      exercises: [
+        {
+          name: 'Exercice chronométré',
+          workDurationSeconds: 45,
+          restDurationSeconds: 30,
+          notes: 'Renseignez une durée de travail (en secondes).'
+        },
+        {
+          name: 'Exercice en répétitions',
+          workDurationSeconds: 0,
+          reps: 12,
+          restDurationSeconds: 30,
+          notes: 'Mettez workDurationSeconds à 0 et renseignez reps : pas de chrono, on avance manuellement.'
+        },
+        {
+          name: 'Exercice mixte (temps + répétitions)',
+          workDurationSeconds: 40,
+          reps: 10,
+          restDurationSeconds: 20,
+          notes: 'Durée ET nombre de répétitions affichés ensemble.'
+        }
+      ]
+    }
   }
   return JSON.stringify(doc, null, 2)
 }
@@ -122,19 +164,43 @@ export function validateWorkoutPayload(
       if (typeof rawEx.name !== 'string' || rawEx.name.trim().length === 0) {
         errors.push(`${label} : nom manquant.`)
       }
-      const work = rawEx.workDurationSeconds
-      if (typeof work !== 'number' || !Number.isFinite(work)) {
-        errors.push(`${label} : durée de travail invalide.`)
-      } else if (work < 0) {
-        errors.push(`${label} : la durée de travail ne peut pas être négative.`)
-      } else if (work === 0) {
-        errors.push(`${label} : la durée de travail doit être supérieure à zéro.`)
+
+      // Durée de travail : optionnelle (0 ou absente = exercice en répétitions).
+      let work = 0
+      const rawWork = rawEx.workDurationSeconds
+      if (rawWork !== undefined && rawWork !== null) {
+        if (typeof rawWork !== 'number' || !Number.isFinite(rawWork)) {
+          errors.push(`${label} : durée de travail invalide.`)
+        } else if (rawWork < 0) {
+          errors.push(`${label} : la durée de travail ne peut pas être négative.`)
+        } else {
+          work = rawWork
+        }
       }
+
+      // Répétitions : optionnelles, entier strictement positif si présentes.
+      let reps = 0
+      const rawReps = rawEx.reps
+      if (rawReps !== undefined && rawReps !== null) {
+        if (typeof rawReps !== 'number' || !Number.isFinite(rawReps) || rawReps <= 0) {
+          errors.push(`${label} : nombre de répétitions invalide.`)
+        } else {
+          reps = rawReps
+        }
+      }
+
+      // Il faut au moins une durée de travail ou un nombre de répétitions.
+      if (work <= 0 && reps <= 0) {
+        errors.push(`${label} : renseignez une durée de travail ou un nombre de répétitions.`)
+      }
+
       const rest = rawEx.restDurationSeconds
-      if (typeof rest !== 'number' || !Number.isFinite(rest)) {
-        errors.push(`${label} : durée de pause invalide.`)
-      } else if (rest < 0) {
-        errors.push(`${label} : la durée de pause ne peut pas être négative.`)
+      if (rest !== undefined && rest !== null) {
+        if (typeof rest !== 'number' || !Number.isFinite(rest)) {
+          errors.push(`${label} : durée de pause invalide.`)
+        } else if (rest < 0) {
+          errors.push(`${label} : la durée de pause ne peut pas être négative.`)
+        }
       }
       if (rawEx.notes !== undefined && typeof rawEx.notes !== 'string') {
         errors.push(`${label} : les notes doivent être du texte.`)
@@ -151,11 +217,16 @@ export function validateWorkoutPayload(
   const clean: WorkoutJsonPayload = {
     name: (name as string).trim(),
     exercises: (rawExercises as Record<string, unknown>[]).map((ex) => {
+      const work =
+        typeof ex.workDurationSeconds === 'number' ? Math.max(0, Math.round(ex.workDurationSeconds)) : 0
+      const rest =
+        typeof ex.restDurationSeconds === 'number' ? Math.max(0, Math.round(ex.restDurationSeconds)) : 0
       const e: WorkoutJsonExercise = {
         name: (ex.name as string).trim(),
-        workDurationSeconds: Math.round(ex.workDurationSeconds as number),
-        restDurationSeconds: Math.round(ex.restDurationSeconds as number)
+        workDurationSeconds: work,
+        restDurationSeconds: rest
       }
+      if (typeof ex.reps === 'number' && ex.reps > 0) e.reps = Math.round(ex.reps)
       const notes = ex.notes as string | undefined
       if (notes && notes.trim().length > 0) e.notes = notes.trim()
       return e
@@ -225,8 +296,9 @@ export function payloadToWorkout(payload: WorkoutJsonPayload): Workout {
   const exercises: Exercise[] = payload.exercises.map((ex) => ({
     id: createId('ex'),
     name: ex.name,
-    workDurationSeconds: ex.workDurationSeconds,
-    restDurationSeconds: ex.restDurationSeconds,
+    workDurationSeconds: ex.workDurationSeconds ?? 0,
+    reps: ex.reps && ex.reps > 0 ? ex.reps : undefined,
+    restDurationSeconds: ex.restDurationSeconds ?? 0,
     notes: ex.notes
   }))
   return {

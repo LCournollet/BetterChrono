@@ -73,7 +73,8 @@ npm start
 
 ### Workouts
 - Create / edit / duplicate / delete workouts.
-- Exercises with **name**, **work duration**, **rest duration**, **notes**.
+- Exercises with **name**, **work duration**, **reps**, **rest duration**, **notes**.
+- Each exercise can be defined by **time**, by **repetitions**, or **both** (at least one is required). A reps-only exercise has no countdown — you advance manually with "Next".
 - Reorder exercises, durations entered in seconds or minutes.
 
 ### Session (timer)
@@ -100,6 +101,7 @@ npm start
 - Import by **file** or **pasted text**, with a **preview** before confirming.
 - Strict validation (invalid JSON, missing field, invalid duration, no exercises).
 - **Duplicate** handling: replace / duplicate with "copy" / skip.
+- **Empty template**: download / copy a ready-to-fill template (Settings → "Modèle JSON vide", or "Insérer un modèle vide" in the import dialog). See [`examples/workout-template.json`](examples/workout-template.json).
 - Versioned format, example provided in [`examples/workout-example.json`](examples/workout-example.json).
 
 ---
@@ -116,11 +118,16 @@ Single workout:
     "name": "Upper body session",
     "notes": "Push-ups, dips and core",
     "exercises": [
-      { "name": "Push-ups", "workDurationSeconds": 45, "restDurationSeconds": 30, "notes": "Controlled tempo" }
+      { "name": "Push-ups", "workDurationSeconds": 45, "restDurationSeconds": 30, "notes": "Controlled tempo" },
+      { "name": "Pull-ups", "workDurationSeconds": 0, "reps": 10, "restDurationSeconds": 30, "notes": "Reps-based, no timer" }
     ]
   }
 }
 ```
+
+**Exercise fields** — `name` (required), `restDurationSeconds`, `notes`, and at least one of:
+- `workDurationSeconds` — work duration in seconds (`0` / omitted = no timer),
+- `reps` — number of repetitions.
 
 Collection of multiple workouts: `"type": "workout-collection"` with a `workouts` array (see [`examples/workout-collection-example.json`](examples/workout-collection-example.json)).
 

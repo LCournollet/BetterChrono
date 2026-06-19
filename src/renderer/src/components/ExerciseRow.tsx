@@ -15,6 +15,8 @@ export interface ExerciseRowProps {
   onMoveDown: (index: number) => void
   onDelete: (index: number) => void
   nameError?: string
+  /** Erreur si ni durée ni répétitions ne sont renseignées. */
+  valueError?: string
 }
 
 /** Ligne d'édition d'un exercice dans le formulaire d'entraînement. */
@@ -26,9 +28,15 @@ export function ExerciseRow({
   onMoveUp,
   onMoveDown,
   onDelete,
-  nameError
+  nameError,
+  valueError
 }: ExerciseRowProps): React.JSX.Element {
   const update = (patch: Partial<Exercise>): void => onChange({ ...exercise, ...patch })
+
+  const handleReps = (raw: string): void => {
+    const num = parseInt(raw, 10)
+    update({ reps: Number.isFinite(num) && num > 0 ? num : undefined })
+  }
 
   return (
     <div className="rounded-xl border border-line bg-surface p-4">
@@ -38,30 +46,40 @@ export function ExerciseRow({
         </div>
 
         <div className="flex-1 space-y-3">
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto_auto]">
-            <Input
-              label="Nom de l'exercice"
-              placeholder="ex. Pompes"
-              value={exercise.name}
-              onChange={(e) => update({ name: e.target.value })}
-              error={nameError}
-              required
-            />
+          <Input
+            label="Nom de l'exercice"
+            placeholder="ex. Pompes"
+            value={exercise.name}
+            onChange={(e) => update({ name: e.target.value })}
+            error={nameError}
+            required
+          />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <DurationField
               label="Travail"
               value={exercise.workDurationSeconds}
-              min={1}
+              min={0}
               onChange={(s) => update({ workDurationSeconds: s })}
-              className="lg:w-44"
+              hint="0 = sans chrono"
+            />
+            <Input
+              label="Répétitions"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              placeholder="ex. 12"
+              value={exercise.reps ?? ''}
+              onChange={(e) => handleReps(e.target.value)}
+              hint="optionnel"
             />
             <DurationField
               label="Pause après"
               value={exercise.restDurationSeconds}
               min={0}
               onChange={(s) => update({ restDurationSeconds: s })}
-              className="lg:w-44"
             />
           </div>
+          {valueError && <p className="text-xs text-danger-600">{valueError}</p>}
           <Input
             label="Notes (optionnel)"
             placeholder="Consignes, tempo, amplitude…"

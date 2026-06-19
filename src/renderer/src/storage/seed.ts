@@ -37,9 +37,10 @@ export function buildSeedWorkouts(): Workout[] {
         {
           id: createId('ex'),
           name: 'Pompes diamant',
-          workDurationSeconds: 30,
+          workDurationSeconds: 0,
+          reps: 15,
           restDurationSeconds: 0,
-          notes: 'Coudes près du corps.'
+          notes: 'En répétitions : avancez manuellement une fois terminé.'
         }
       ]
     },

@@ -10,6 +10,10 @@ export interface TimerDisplayProps {
   kind: PhaseKind
   exerciseName: string
   progressLabel: string // ex. "Exercice 3 / 8"
+  /** Phase de travail sans chronomètre (basée sur les répétitions). */
+  untimed?: boolean
+  /** Nombre de répétitions visé (optionnel). */
+  reps?: number
 }
 
 /**
@@ -21,14 +25,17 @@ export function TimerDisplay({
   phaseDurationSeconds,
   kind,
   exerciseName,
-  progressLabel
+  progressLabel,
+  untimed = false,
+  reps
 }: TimerDisplayProps): React.JSX.Element {
   const size = 340
   const stroke = 14
   const radius = (size - stroke) / 2
   const circumference = 2 * Math.PI * radius
   const ratio = phaseDurationSeconds > 0 ? remainingSeconds / phaseDurationSeconds : 0
-  const clamped = Math.min(1, Math.max(0, ratio))
+  // Anneau plein et statique pour une phase en répétitions (pas de décompte).
+  const clamped = untimed ? 1 : Math.min(1, Math.max(0, ratio))
   const dashOffset = circumference * (1 - clamped)
 
   const isWork = kind === 'work'
@@ -69,13 +76,29 @@ export function TimerDisplay({
         >
           {phaseText}
         </span>
-        <span className="font-mono text-[4.2rem] font-semibold leading-none text-ink tabular-nums">
-          {formatDuration(remainingSeconds)}
-        </span>
+        {untimed ? (
+          <div className="flex items-baseline gap-2">
+            <span className="font-mono text-[4.2rem] font-semibold leading-none text-ink tabular-nums">
+              ×{reps ?? '—'}
+            </span>
+            <span className="text-lg font-medium text-ink-faint">reps</span>
+          </div>
+        ) : (
+          <span className="font-mono text-[4.2rem] font-semibold leading-none text-ink tabular-nums">
+            {formatDuration(remainingSeconds)}
+          </span>
+        )}
         <span className="mt-3 line-clamp-2 max-w-[240px] text-base font-medium text-ink-soft">
           {exerciseName}
         </span>
         <span className="mt-1 text-sm text-ink-faint tabular-nums">{progressLabel}</span>
+        {untimed ? (
+          <span className="mt-2 text-xs text-ink-faint">Appuyez sur « Suivant » une fois terminé</span>
+        ) : (
+          reps !== undefined && (
+            <span className="mt-2 text-xs text-ink-faint tabular-nums">Objectif : {reps} répétitions</span>
+          )
+        )}
       </div>
     </div>
   )
