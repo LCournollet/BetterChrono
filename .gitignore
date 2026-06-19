@@ -4,3 +4,6 @@ out
 *.log
 .DS_Store
 release
+
+# Source brute du logo (les versions dérivées build/icon.png et assets/logo.png sont versionnées)
+ChatGPT Image*.png

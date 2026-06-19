@@ -8,9 +8,9 @@ import {
   IconPlay,
   IconCalendar,
   IconChart,
-  IconSettings,
-  IconClock
+  IconSettings
 } from '../components/Icons'
+import logoUrl from '../assets/logo.png'
 
 interface NavItem {
   page: Page
@@ -36,9 +36,11 @@ export function Sidebar(): React.JSX.Element {
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col border-r border-line bg-surface">
       <div className="flex items-center gap-3 px-5 py-6">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-500 text-white">
-          <IconClock width={22} height={22} />
-        </div>
+        <img
+          src={logoUrl}
+          alt="BetterChrono"
+          className="h-11 w-11 rounded-xl border border-line object-cover"
+        />
         <div>
           <p className="text-base font-semibold tracking-tight text-ink">BetterChrono</p>
           <p className="text-xs text-ink-faint">Suivi d'entraînement</p>

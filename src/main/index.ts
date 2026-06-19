@@ -1,9 +1,20 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
+import { existsSync } from 'fs'
 import { writeFile, readFile } from 'fs/promises'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 
+/** Icône de l'application (résolue en dev comme en production). */
+function resolveAppIcon(): string | undefined {
+  const candidates = [
+    join(__dirname, '../../build/icon.png'),
+    join(process.resourcesPath ?? '', 'icon.png')
+  ]
+  return candidates.find((p) => p && existsSync(p))
+}
+
 function createWindow(): void {
+  const icon = resolveAppIcon()
   const mainWindow = new BrowserWindow({
     width: 1320,
     height: 860,
@@ -13,6 +24,7 @@ function createWindow(): void {
     autoHideMenuBar: true,
     backgroundColor: '#f4f6f9',
     title: 'BetterChrono',
+    ...(icon ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
