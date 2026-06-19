@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "type": "workout-collection",
+  "workouts": [
+    {
+      "name": "Cardio HIIT",
+      "notes": "Intervalles courts et intenses",
+      "exercises": [
+        { "name": "Burpees", "workDurationSeconds": 30, "restDurationSeconds": 30 },
+        { "name": "Mountain climbers", "workDurationSeconds": 30, "restDurationSeconds": 30 },
+        { "name": "Squats sautés", "workDurationSeconds": 30, "restDurationSeconds": 60 }
+      ]
+    },
+    {
+      "name": "Gainage complet",
+      "notes": "Renforcement de la sangle abdominale",
+      "exercises": [
+        { "name": "Planche", "workDurationSeconds": 60, "restDurationSeconds": 20 },
+        { "name": "Planche latérale droite", "workDurationSeconds": 30, "restDurationSeconds": 10 },
+        { "name": "Planche latérale gauche", "workDurationSeconds": 30, "restDurationSeconds": 20 },
+        { "name": "Hollow hold", "workDurationSeconds": 40, "restDurationSeconds": 0 }
+      ]
+    }
+  ]
+}

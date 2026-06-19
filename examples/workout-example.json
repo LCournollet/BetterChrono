@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "type": "workout",
+  "workout": {
+    "name": "Séance haut du corps",
+    "notes": "Pompes, dips et gainage",
+    "exercises": [
+      {
+        "name": "Pompes",
+        "workDurationSeconds": 45,
+        "restDurationSeconds": 30,
+        "notes": "Tempo contrôlé"
+      },
+      {
+        "name": "Dips",
+        "workDurationSeconds": 30,
+        "restDurationSeconds": 45,
+        "notes": "Amplitude propre"
+      },
+      {
+        "name": "Roue d'abdos",
+        "workDurationSeconds": 30,
+        "restDurationSeconds": 60,
+        "notes": "Ne pas creuser le dos"
+      }
+    ]
+  }
+}
